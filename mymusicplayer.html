@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Music & Photo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #0d0a17;
+            color: white;
+        }
+
+        /* CONTAINER HP */
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 880px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            background-color: #161224;
+        }
+
+        @media (min-width: 450px) {
+            .app-container {
+                height: 92vh;
+                border-radius: 35px;
+                border: 4px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        /* BACKGROUND APPS */
+        .app-background {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('pangeran.jpg');
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+            z-index: 1;
+        }
+
+        .app-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(18, 12, 28, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 2;
+        }
+
+        .app-content {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* PAGES */
+        .tab-page {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 20px 140px 20px;
+            display: none;
+        }
+
+        .tab-page.active {
+            display: block;
+        }
+
+        /* HEADER HELLO! */
+        .greeting-title {
+            font-size: 26px;
+            font-weight: 800;
+            margin: 10px 0 12px 0;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        /* KAROSEL FOTO (UKURAN BESAR & BISA DIGESER TANPA BATAS) */
+        .photo-carousel {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+            scrollbar-width: none;
+        }
+
+        .photo-carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .carousel-card {
+            min-width: 130px;
+            height: 160px;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.2s;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .carousel-card:active {
+            transform: scale(0.95);
+        }
+
+        /* SECTION TITLE & TOMBOL HAPUS PLAYLIST */
+        .playlist-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .playlist-header-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .btn-toggle-delete {
+            background: rgba(255, 100, 100, 0.2);
+            border: 1px solid rgba(255, 100, 100, 0.4);
+            color: #ff9999;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* DAFTAR LAGU */
+        .song-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+        }
+
+        .song-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 10px 14px;
+            border-radius: 18px;
+        }
+
+        .song-click-area {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .song-number {
+            font-size: 14px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.6);
+            width: 24px;
+            flex-shrink: 0;
+        }
+
+        .song-thumb {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-right: 12px;
+            background-color: #333;
+            flex-shrink: 0;
+        }
+
+        .song-details {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .song-title {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .song-artist {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.65);
+            margin-top: 2px;
+        }
+
+        /* TOMBOL PLAY SEGITIGA DI KANAN (SESUAI SKETSA) */
+        .song-play-icon {
+            font-size: 14px;
+            color: #ff80bf;
+            background: rgba(255, 128, 191, 0.15);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-delete-item {
+            background: rgba(255, 75, 75, 0.8);
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 8px;
+            display: none;
+        }
+
+        .show-delete .btn-delete-item {
+            display: block;
+        }
+
+        /* GRID GALERI KOLEKSI */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        .grid-photo-card {
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            height: 160px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .grid-photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-action-btn {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(8px);
+            border: none;
+            color: white;
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* TOMBOL SAMPAH DI KOLEKSI FOTO */
+        .photo-delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(235, 145, 200, 0.85);
+            backdrop-filter: blur(8px);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        /* FORM UPLOAD CARD */
+        .upload-card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 22px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 13px;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, #b4487e, #c2759f);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        /* MINI PLAYER BAR FLOATING */
+        .mini-player {
+            position: absolute;
+            bottom: 68px;
+            left: 15px;
+            right: 15px;
+            height: 62px;
+            background: rgba(25, 15, 32, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            z-index: 10;
+        }
+
+        .mini-thumb {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-right: 12px;
+            background-color: #333;
+        }
+
+        .mini-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .mini-title {
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mini-artist {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.65);
+            margin-top: 2px;
+        }
+
+        .btn-play-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f3bbd7;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* BOTTOM NAV BAR */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 68px;
+            background: rgba(12, 8, 18, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 9;
+        }
+
+        .nav-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .nav-button.active {
+            color: #e7d1dc;
+            font-weight: bold;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- BACKGROUND UTAMA -->
+        <div class="app-background" id="appBg"></div>
+        <div class="app-overlay"></div>
+
+        <div class="app-content">
+
+            <!-- TAB 1: PLAYLIST & FOTO HELLO (GALERI GESER TANPA BATAS) -->
+            <div id="tabPlaylist" class="tab-page active">
+                <div class="greeting-title">Hello!</div>
+
+                <!-- DERETAN FOTO ATAS (BISA DIGESER, NYAMBUNG KE KOLEKSI) -->
+                <div class="photo-carousel" id="carouselPhotos">
+                    <div class="empty-state" id="emptyCarouselMsg" style="width: 100%; padding: 20px; border-style: solid;">
+                        Belum ada foto. Tambahkan di tab <b>Tambah</b>! 📸
+                    </div>
+                </div>
+
+                <!-- MY PLAYLIST + TOMBOL HAPUS -->
+                <div class="playlist-header-row">
+                    <div class="playlist-header-title">My Playlist</div>
+                    <button class="btn-toggle-delete" id="btnToggleDelete" onclick="toggleDeleteMode()">Hapus</button>
+                </div>
+
+                <!-- DAFTAR LAGU -->
+                <div class="song-list" id="playlistSongs">
+                    <div class="empty-state" id="emptyPlaylistMsg">
+                        Playlist masih kosong.<br>Yuk tambah lagu lewat tab <b>Tambah</b>! 🎵
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: KOLEKSI FOTO -->
+            <div id="tabKoleksi" class="tab-page">
+                <div class="greeting-title">Koleksi Foto 📸</div>
+                <p style="font-size: 13px; color: rgba(255,255,255,0.7); margin-top: -8px; margin-bottom: 20px;">
+                    Klik "Set BG" untuk mengganti background, atau ikon tempat sampah (🗑️) untuk menghapus foto.
+                </p>
+
+                <div class="photo-grid" id="gridKoleksi">
+                    <div class="empty-state" id="emptyKoleksiMsg" style="grid-column: span 2;">
+                        Belum ada foto di koleksi.<br>Upload fotomu di tab <b>Tambah</b>! 🖼️
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: TAMBAH (LAGU & FOTO) -->
+            <div id="tabTambah" class="tab-page">
+                <div class="greeting-title">Tambah Koleksi</div>
+
+                <!-- UPLOAD LAGU -->
+                <div class="upload-card">
+                    <h4 style="margin-top:0; color:#ff80e3; font-size:15px;">🎵 Tambah Lagu Baru (.mp3)</h4>
+                    
+                    <div class="form-group">
+                        <label>Judul Lagu</label>
+                        <input type="text" id="songTitleInput" placeholder="Contoh: Monokrom">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Penyanyi</label>
+                        <input type="text" id="songArtistInput" placeholder="Contoh: Tulus">
+                    </div>
+
+                    <div class="form-group">
+                        <label>File Musik (.mp3)</label>
+                        <input type="file" id="songAudioFile" accept="audio/*">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Foto Sampul Lagu</label>
+                        <input type="file" id="songImageFile" accept="image/*">
+                    </div>
+
+                    <button class="btn-action" onclick="addNewTrack()">Simpan ke Playlist 🎧</button>
+                </div>
+
+                <!-- UPLOAD FOTO KOLEKSI -->
+                <div class="upload-card">
+                    <h4 style="margin-top:0; color:#ff80bf; font-size:15px;">🖼️ Upload Foto Keseharian</h4>
+                    
+                    <div class="form-group">
+                        <label>Pilih Foto dari Galeri HP</label>
+                        <input type="file" id="newDailyPhoto" accept="image/*">
+                    </div>
+
+                    <button class="btn-action" onclick="addNewPhoto()">Tambahkan ke Koleksi 📸</button>
+                </div>
+            </div>
+
+            <!-- MINI PLAYER BAR -->
+            <div class="mini-player">
+                <img class="mini-thumb" id="pThumb" src="https://via.placeholder.com/150/ff69b4/ffffff?text=Music" alt="Cover">
+                <div class="mini-info">
+                    <div class="mini-title" id="pTitle">Belum Ada Lagu</div>
+                    <div class="mini-artist" id="pArtist">Player</div>
+                </div>
+                <button class="btn-play-toggle" id="pBtn" onclick="togglePlayPause()">▶</button>
+            </div>
+
+            <!-- BOTTOM NAV BAR -->
+            <div class="bottom-nav">
+                <div class="nav-button active" onclick="switchNavTab('tabPlaylist', this)">
+                    <div class="nav-icon">🎧</div>
+                    <div>Playlist</div>
+                </div>
+                <div class="nav-button" onclick="switchNavTab('tabKoleksi', this)">
+                    <div class="nav-icon">🖼️</div>
+                    <div>Koleksi</div>
+                </div>
+                <div class="nav-button" onclick="switchNavTab('tabTambah', this)">
+                    <div class="nav-icon">➕</div>
+                    <div>Tambah</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- AUDIO PLAYER -->
+    <audio id="audioElement"></audio>
+
+    <script>
+        const audio = document.getElementById('audioElement');
+        let isAudioPlaying = false;
+        let isDeleteMode = false;
+        let photoCollection = []; // Menyimpan data foto bersama
+
+        function switchNavTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        function toggleDeleteMode() {
+            const playlistSongs = document.getElementById('playlistSongs');
+            const btn = document.getElementById('btnToggleDelete');
+            
+            isDeleteMode = !isDeleteMode;
+            if (isDeleteMode) {
+                playlistSongs.classList.add('show-delete');
+                btn.innerText = 'Selesai';
+                btn.style.background = 'rgba(255, 100, 100, 0.6)';
+            } else {
+                playlistSongs.classList.remove('show-delete');
+                btn.innerText = 'Hapus';
+                btn.style.background = 'rgba(255, 100, 100, 0.2)';
+            }
+        }
+
+        function setAsBackground(imageSrc) {
+            document.getElementById('appBg').style.backgroundImage = `url('${imageSrc}')`;
+            alert('Background aplikasi berhasil diganti! ✨');
+        }
+
+        function playSong(title, artist, thumbSrc, audioSrc) {
+            document.getElementById('pTitle').innerText = title;
+            document.getElementById('pArtist').innerText = artist;
+            document.getElementById('pThumb').src = thumbSrc;
+
+            if (audioSrc) {
+                audio.src = audioSrc;
+                audio.play();
+                isAudioPlaying = true;
+                document.getElementById('pBtn').innerText = '⏸';
+
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: title,
+                        artist: artist,
+                        artwork: [{ src: thumbSrc, sizes: '192x192', type: 'image/png' }]
+                    });
+                }
+            }
+        }
+
+        function togglePlayPause() {
+            if (!audio.src) return;
+            if (isAudioPlaying) {
+                audio.pause();
+                isAudioPlaying = false;
+                document.getElementById('pBtn').innerText = '▶';
+            } else {
+                audio.play();
+                isAudioPlaying = true;
+                document.getElementById('pBtn').innerText = '⏸';
+            }
+        }
+
+        function hapusLagu(buttonElement) {
+            const songItem = buttonElement.closest('.song-item');
+            if (songItem) {
+                songItem.remove();
+                updateSongNumbers();
+                checkEmptyPlaylist();
+            }
+        }
+
+        function updateSongNumbers() {
+            const numbers = document.querySelectorAll('#playlistSongs .song-number');
+            numbers.forEach((num, index) => {
+                num.innerText = `${index + 1}.`;
+            });
+        }
+
+        function checkEmptyPlaylist() {
+            const songs = document.querySelectorAll('#playlistSongs .song-item');
+            const emptyMsg = document.getElementById('emptyPlaylistMsg');
+            emptyMsg.style.display = songs.length === 0 ? 'block' : 'none';
+        }
+
+        function addNewTrack() {
+            const title = document.getElementById('songTitleInput').value;
+            const artist = document.getElementById('songArtistInput').value;
+            const audioFile = document.getElementById('songAudioFile').files[0];
+            const imageFile = document.getElementById('songImageFile').files[0];
+
+            if (!title || !audioFile) {
+                alert('Judul lagu dan file .mp3 wajib diisi ya!');
+                return;
+            }
+
+            const audioUrl = URL.createObjectURL(audioFile);
+            const imageUrl = imageFile ? URL.createObjectURL(imageFile) : 'https://via.placeholder.com/150/ff69b4/ffffff?text=Music';
+
+            const playlistContainer = document.getElementById('playlistSongs');
+            const newSongItem = document.createElement('div');
+            newSongItem.className = 'song-item';
+            newSongItem.innerHTML = `
+                <div class="song-click-area" onclick="playSong('${title}', '${artist || 'Unknown'}', '${imageUrl}', '${audioUrl}')">
+                    <div class="song-number">.</div>
+                    <img class="song-thumb" src="${imageUrl}" alt="${title}">
+                    <div class="song-details">
+                        <div class="song-title">${title}</div>
+                        <div class="song-artist">${artist || 'Unknown Artist'}</div>
+                    </div>
+                    <div class="song-play-icon">▶</div>
+                </div>
+                <button class="btn-delete-item" onclick="hapusLagu(this)">🗑️</button>
+            `;
+
+            playlistContainer.appendChild(newSongItem);
+            updateSongNumbers();
+            checkEmptyPlaylist();
+
+            playSong(title, artist || 'Unknown Artist', imageUrl, audioUrl);
+
+            document.getElementById('songTitleInput').value = '';
+            document.getElementById('songArtistInput').value = '';
+            document.getElementById('songAudioFile').value = '';
+            document.getElementById('songImageFile').value = '';
+            switchNavTab('tabPlaylist', document.querySelectorAll('.nav-button')[0]);
+        }
+
+        // TAMBAH FOTO (MENYAMBUNG KE KAROSEL & KOLEKSI SECARA REALTIME)
+        function addNewPhoto() {
+            const photoFile = document.getElementById('newDailyPhoto').files[0];
+            if (!photoFile) {
+                alert('Pilih fotonya terlebih dahulu ya!');
+                return;
+            }
+
+            const photoUrl = URL.createObjectURL(photoFile);
+            const photoId = 'photo_' + Date.now();
+            
+            photoCollection.push({ id: photoId, url: photoUrl });
+            renderPhotos();
+
+            document.getElementById('newDailyPhoto').value = '';
+            alert('Foto berhasil ditambahkan ke Koleksi & Karosel! 📸');
+            switchNavTab('tabKoleksi', document.querySelectorAll('.nav-button')[1]);
+        }
+
+        function removePhoto(photoId) {
+            photoCollection = photoCollection.filter(p => p.id !== photoId);
+            renderPhotos();
+        }
+
+        // RENDER ULANG TAMPILAN FOTO (KAROSEL ATAS & KOLEKSI BAWAH)
+        function renderPhotos() {
+            const carousel = document.getElementById('carouselPhotos');
+            const grid = document.getElementById('gridKoleksi');
+            const emptyCarousel = document.getElementById('emptyCarouselMsg');
+            const emptyKoleksi = document.getElementById('emptyKoleksiMsg');
+
+            carousel.innerHTML = '';
+            grid.innerHTML = '';
+
+            if (photoCollection.length === 0) {
+                carousel.innerHTML = `<div class="empty-state" id="emptyCarouselMsg" style="width: 100%; padding: 20px; border-style: solid;">Belum ada foto. Tambahkan di tab <b>Tambah</b>! 📸</div>`;
+                grid.innerHTML = `<div class="empty-state" id="emptyKoleksiMsg" style="grid-column: span 2;">Belum ada foto di koleksi.<br>Upload fotomu di tab <b>Tambah</b>! 🖼️</div>`;
+                return;
+            }
+
+            photoCollection.forEach(photo => {
+                // Render Karosel Atas (Bisa digeser tanpa batas, ukuran besar)
+                const card = document.createElement('img');
+                card.className = 'carousel-card';
+                card.src = photo.url;
+                card.title = 'Klik untuk jadikan background';
+                card.onclick = () => setAsBackground(photo.url);
+                carousel.appendChild(card);
+
+                // Render Grid Koleksi (Lengkap dengan Tombol Hapus Tempat Sampah 🗑️)
+                const gridCard = document.createElement('div');
+                gridCard.className = 'grid-photo-card';
+                gridCard.innerHTML = `
+                    <img src="${photo.url}" alt="Foto Koleksi">
+                    <button class="photo-action-btn" onclick="setAsBackground('${photo.url}')">Set BG</button>
+                    <button class="photo-delete-btn" onclick="removePhoto('${photo.id}')" title="Hapus foto">🗑️</button>
+                `;
+                grid.appendChild(gridCard);
+            });
+        }
+    </script>
+</body>
+</html>
